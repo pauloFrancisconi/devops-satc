@@ -39,7 +39,7 @@ jobs:
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/satc-devops:0.0.1 .
 
       - name: Push Docker image
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/satc-devops:0.0.1 .
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/satc-devops:0.0.1
 
 
       - name: Run Trivy vulnerability scanner
