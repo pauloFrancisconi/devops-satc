@@ -15,7 +15,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
         with:
@@ -34,13 +33,11 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      
       - name: Build Docker image
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/satc-devops:0.0.1 .
 
       - name: Push Docker image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/satc-devops:0.0.1
-
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
@@ -60,31 +57,32 @@ jobs:
       - name: Analyze Trivy results
         run: |
           if [ -f trivy-results.json ]; then
-            VULN_COUNT=$(jq '[.Results[].Vulnerabilities[] | select(.Severity == "MEDIUM")] | length' trivy-results.json)
-            echo "Quantidade de vulnerabilidades medias: $VULN_COUNT"
+
+            VULN_COUNT=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "MEDIUM")] | length' trivy-results.json)
+            echo "Quantidade de vulnerabilidades médias: $VULN_COUNT"
 
             if [ "$VULN_COUNT" -gt 50 ]; then
-              echo "Pipeline bloqueada: mais de 50 vulnerabilidades medias encontradas."
+              echo "Pipeline bloqueada: mais de 50 vulnerabilidades médias encontradas."
               exit 1
             fi
+
           else
-            echo "Arquivo de resultados do Trivy nao encontrado."
+            echo "Arquivo de resultados do Trivy não encontrado."
             exit 1
           fi
 
-      - name: Falhar se houver mais de 50 vulnerabilidades medias
+      - name: Falhar se houver mais de 50 vulnerabilidades médias (Sonar)
         run: |
           COUNT=$(curl -s -u "${SONAR_TOKEN}:" \
             "https://sonarcloud.io/api/issues/search?componentKeys=${SONAR_PROJECT_KEY}&types=VULNERABILITY&severities=MAJOR&resolved=false&ps=1" \
             | jq '.total')
 
-          echo "Quantidade de vulnerabilidades medias: $COUNT"
+          echo "Quantidade de vulnerabilidades médias: $COUNT"
 
           if [ "$COUNT" -gt 50 ]; then
-            echo "Pipeline bloqueada: mais de 50 vulnerabilidades medias encontradas."
+            echo "Pipeline bloqueada: mais de 50 vulnerabilidades médias encontradas."
             exit 1
           fi
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonarcloud.io
           SONAR_PROJECT_KEY: pauloFrancisconi_devops-satc
