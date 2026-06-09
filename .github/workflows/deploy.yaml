@@ -44,6 +44,10 @@ jobs:
           # Cria namespace ${{ vars.K8S_NAMESPACE }} idempotentemente
           kubectl create namespace ${{ vars.K8S_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
 
+      - name: Garantir deploy limpo
+        run: |
+          kubectl rollout restart deployment app-satc -n ${{ vars.K8S_NAMESPACE }} || true
+
       - name: Aplicar manifests Kubernetes
         run: |
           # Aplica deployment.yaml e service.yaml do diretÃ³rio k8s/
